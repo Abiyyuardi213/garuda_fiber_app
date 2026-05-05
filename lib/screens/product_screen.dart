@@ -6,7 +6,6 @@ import '../models/product_model.dart';
 import '../models/payment_method_model.dart';
 import '../models/shipping_service_model.dart';
 import '../widgets/product_card.dart';
-import 'detail_product_screen.dart';
 
 class ProductScreen extends StatefulWidget {
   const ProductScreen({super.key});
@@ -41,6 +40,7 @@ class _ProductScreenState extends State<ProductScreen>
     super.dispose();
   }
 
+  // Ambil data produk dan kategori dari API
   void _loadData() async {
     try {
       List<Product> products = await _apiService.getProducts();
@@ -58,6 +58,7 @@ class _ProductScreenState extends State<ProductScreen>
     }
   }
 
+  // Filter produk berdasarkan kategori
   void _filterByCategory(String categoryName) {
     setState(() {
       _selectedCategory = categoryName;
@@ -71,6 +72,7 @@ class _ProductScreenState extends State<ProductScreen>
     });
   }
 
+  // Cari produk berdasarkan keyword
   void _searchProduct(String keyword) {
     setState(() {
       _filteredProducts = _allProducts
@@ -133,6 +135,15 @@ class _ProductScreenState extends State<ProductScreen>
   }
 
   Widget _buildProdukTab() {
+    // Responsif berdasarkan lebar layar
+    final double lebarLayar = MediaQuery.of(context).size.width;
+    int jumlahKolom = 2;
+    if (lebarLayar >= 1200) {
+      jumlahKolom = 4; // desktop
+    } else if (lebarLayar >= 600) {
+      jumlahKolom = 3; // tablet
+    }
+
     return Column(
       children: [
         // Header Banner
@@ -163,6 +174,7 @@ class _ProductScreenState extends State<ProductScreen>
                 ),
               ),
               SizedBox(height: 12),
+              // Search bar
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -185,73 +197,134 @@ class _ProductScreenState extends State<ProductScreen>
         ),
 
         // Filter Kategori
-        Container(
-          color: Colors.white,
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'Kategori',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: Colors.black87,
+       // Tombol Filter Kategori
+Container(
+  color: Colors.white,
+  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        '${_filteredProducts.length} Produk',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 13,
+          color: Colors.black87,
+        ),
+      ),
+      GestureDetector(
+        onTap: () {
+          // Tampilkan bottom sheet kategori
+          showModalBottomSheet(
+            context: context,
+            shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            builder: (context) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-              ),
-              SizedBox(height: 6),
-              SizedBox(
-                height: 35,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  itemCount: _categories.length + 1,
-                  itemBuilder: (context, index) {
-                    String nama = index == 0
-                        ? 'Semua'
-                        : _categories[index - 1].categoryName;
-                    bool dipilih = _selectedCategory == nama;
-                    return Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => _filterByCategory(nama),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 4),
-                          decoration: BoxDecoration(
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Pilih Kategori',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(),
+                  // List kategori
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        'Semua',
+                        ..._categories.map((c) => c.categoryName)
+                      ].map((nama) {
+                        bool dipilih = _selectedCategory == nama;
+                        return ListTile(
+                          leading: Icon(
+                            dipilih
+                                ? Icons.check_circle
+                                : Icons.circle_outlined,
                             color: dipilih
                                 ? Colors.blue[800]
-                                : Colors.grey[100],
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: dipilih
-                                  ? Colors.blue[800]!
-                                  : Colors.grey[300]!,
-                            ),
+                                : Colors.grey,
+                            size: 20,
                           ),
-                          child: Text(
+                          title: Text(
                             nama,
                             style: TextStyle(
-                              color:
-                                  dipilih ? Colors.white : Colors.black87,
-                              fontSize: 11,
+                              fontSize: 13,
                               fontWeight: dipilih
                                   ? FontWeight.bold
                                   : FontWeight.normal,
+                              color: dipilih
+                                  ? Colors.blue[800]
+                                  : Colors.black87,
                             ),
                           ),
-                        ),
-                      ),
-                    );
-                  },
+                          onTap: () {
+                            _filterByCategory(nama);
+                            Navigator.pop(context);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                ],
+              );
+            },
+          );
+        },
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[300]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.tune, size: 16, color: Colors.blue[800]),
+              SizedBox(width: 6),
+              Text(
+                _selectedCategory == 'Semua'
+                    ? 'Filter'
+                    : _selectedCategory,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue[800],
+                  fontWeight: FontWeight.bold,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
+      ),
+    ],
+  ),
+),
 
         // Info jumlah produk
         Padding(
@@ -299,8 +372,7 @@ class _ProductScreenState extends State<ProductScreen>
                           SizedBox(height: 16),
                           Text(
                             'Produk tidak ditemukan',
-                            style:
-                                TextStyle(fontSize: 16, color: Colors.grey),
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
                           ),
                           SizedBox(height: 8),
                           TextButton(
@@ -317,23 +389,21 @@ class _ProductScreenState extends State<ProductScreen>
                       padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
                       gridDelegate:
                           SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
+                        crossAxisCount: jumlahKolom, // responsif
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
-                        childAspectRatio: 0.74,
+                        childAspectRatio: 0.65,
                       ),
                       itemCount: _filteredProducts.length,
                       itemBuilder: (context, index) {
                         return ProductCard(
                           product: _filteredProducts[index],
                           onTap: () {
-                            Navigator.push(
+                            // Navigasi ke detail produk dengan passing argument
+                            Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailProdukScreen(
-                                  product: _filteredProducts[index],
-                                ),
-                              ),
+                              '/detail',
+                              arguments: _filteredProducts[index],
                             );
                           },
                         );
@@ -344,443 +414,432 @@ class _ProductScreenState extends State<ProductScreen>
     );
   }
 
- Widget _buildKategoriTab() {
-  return FutureBuilder<List<Category>>(
-    future: _apiService.getCategories(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return Center(
-            child: CircularProgressIndicator(color: Colors.blue[800]));
-      }
-      if (snapshot.hasError) {
-        return Center(child: Text('Error: ${snapshot.error}'));
-      }
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return Center(child: Text('Data tidak ditemukan'));
-      }
-      final categories = snapshot.data!;
-      return Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue[900]!, Colors.blue[600]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+  Widget _buildKategoriTab() {
+    return FutureBuilder<List<Category>>(
+      future: _apiService.getCategories(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+              child: CircularProgressIndicator(color: Colors.blue[800]));
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('Data tidak ditemukan'));
+        }
+        final categories = snapshot.data!;
+        return Column(
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue[900]!, Colors.blue[600]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Kategori Produk',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${categories.length} kategori tersedia',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Kategori Produk',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '${categories.length} kategori tersedia',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          // List Kategori
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(12),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final cat = categories[index];
-                return Container(
-                  margin: EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    leading: Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.category_outlined,
-                        color: Colors.blue[800],
-                        size: 24,
-                      ),
-                    ),
-                    title: Text(
-                      cat.categoryName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    subtitle: Padding(
-                      padding: EdgeInsets.only(top: 4),
-                      child: Text(
-                        cat.description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    trailing: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.chevron_right,
-                        color: Colors.blue[800],
-                        size: 20,
-                      ),
-                    ),
-                    onTap: () {},
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-  Widget _buildPembayaranTab() {
-  return FutureBuilder<List<PaymentMethod>>(
-    future: _apiService.getPaymentMethods(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return Center(
-            child: CircularProgressIndicator(color: Colors.blue[800]));
-      }
-      if (snapshot.hasError) {
-        return Center(child: Text('Error: ${snapshot.error}'));
-      }
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return Center(child: Text('Data tidak ditemukan'));
-      }
-      final methods = snapshot.data!;
-      return Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue[900]!, Colors.blue[600]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Metode Pembayaran',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '${methods.length} metode tersedia',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // List Pembayaran
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(12),
-              itemCount: methods.length,
-              itemBuilder: (context, index) {
-                final pm = methods[index];
-
-                // Tentukan icon dan warna berdasarkan nama bank
-                IconData icon = Icons.account_balance;
-                Color warna = Colors.blue[800]!;
-
-                String namaLower = pm.namaBank.toLowerCase();
-                if (namaLower.contains('mandiri')) {
-                  icon = Icons.account_balance;
-                  warna = Colors.yellow[800]!;
-                } else if (namaLower.contains('bca')) {
-                  icon = Icons.account_balance;
-                  warna = Colors.blue[800]!;
-                } else if (namaLower.contains('bni')) {
-                  icon = Icons.account_balance;
-                  warna = Colors.orange[800]!;
-                } else if (namaLower.contains('bri')) {
-                  icon = Icons.account_balance;
-                  warna = Colors.blue[900]!;
-                } else if (namaLower.contains('gopay')) {
-                  icon = Icons.account_balance_wallet;
-                  warna = Colors.green[700]!;
-                } else if (namaLower.contains('dana')) {
-                  icon = Icons.account_balance_wallet;
-                  warna = Colors.blue[600]!;
-                } else if (namaLower.contains('ovo')) {
-                  icon = Icons.account_balance_wallet;
-                  warna = Colors.purple[700]!;
-                } else if (namaLower.contains('spay') ||
-                    namaLower.contains('shopee')) {
-                  icon = Icons.account_balance_wallet;
-                  warna = Colors.orange[700]!;
-                }
-
-                return Container(
-                  margin: EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    leading: Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(icon, color: warna, size: 24),
-                    ),
-                    title: Text(
-                      pm.namaBank,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 4),
-                        Text(
-                          'No: ${pm.nomorRekening}',
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey[600]),
-                        ),
-                        Text(
-                          'A/N: ${pm.atasNama}',
-                          style: TextStyle(
-                              fontSize: 12, color: Colors.grey[600]),
+            // List Kategori
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.all(12),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final cat = categories[index];
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
                         ),
                       ],
                     ),
-                    isThreeLine: true,
-                    trailing: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                    child: ListTile(
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.category_outlined,
+                          color: Colors.blue[800],
+                          size: 24,
+                        ),
                       ),
-                      child: Icon(Icons.chevron_right,
-                          color: warna, size: 20),
+                      title: Text(
+                        cat.categoryName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          cat.description,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey[600]),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      trailing: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.chevron_right,
+                          color: Colors.blue[800],
+                          size: 20,
+                        ),
+                      ),
+                      onTap: () {},
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-  Widget _buildPengirimanTab() {
-  final currencyFormat = NumberFormat.currency(
-      locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-  return FutureBuilder<List<ShippingService>>(
-    future: _apiService.getShippingServices(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return Center(
-            child: CircularProgressIndicator(color: Colors.blue[800]));
-      }
-      if (snapshot.hasError) {
-        return Center(child: Text('Error: ${snapshot.error}'));
-      }
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-        return Center(child: Text('Data tidak ditemukan'));
-      }
-      final services = snapshot.data!;
-      return Column(
-        children: [
-          // Header
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue[900]!, Colors.blue[600]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                  );
+                },
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Jasa Pengiriman',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPembayaranTab() {
+    return FutureBuilder<List<PaymentMethod>>(
+      future: _apiService.getPaymentMethods(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+              child: CircularProgressIndicator(color: Colors.blue[800]));
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('Data tidak ditemukan'));
+        }
+        final methods = snapshot.data!;
+        return Column(
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue[900]!, Colors.blue[600]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                SizedBox(height: 4),
-                Text(
-                  '${services.length} jasa pengiriman tersedia',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Metode Pembayaran',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 4),
+                  Text(
+                    '${methods.length} metode tersedia',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          // List Pengiriman
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(12),
-              itemCount: services.length,
-              itemBuilder: (context, index) {
-                final s = services[index];
+            // List Pembayaran
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.all(12),
+                itemCount: methods.length,
+                itemBuilder: (context, index) {
+                  final pm = methods[index];
 
-                // Warna berdasarkan nama jasa
-                Color warna = Colors.orange[700]!;
-                String namaLower = s.nama.toLowerCase();
-                if (namaLower.contains('jne')) {
-                  warna = Colors.orange[800]!;
-                } else if (namaLower.contains('j&t') ||
-                    namaLower.contains('jnt')) {
-                  warna = Colors.red[700]!;
-                } else if (namaLower.contains('indah')) {
-                  warna = Colors.green[700]!;
-                } else if (namaLower.contains('sicepat')) {
-                  warna = Colors.orange[600]!;
-                } else if (namaLower.contains('anteraja')) {
-                  warna = Colors.yellow[800]!;
-                }
+                  // Tentukan icon dan warna berdasarkan nama bank
+                  IconData icon = Icons.account_balance;
+                  Color warna = Colors.blue[800]!;
+                  String namaLower = pm.namaBank.toLowerCase();
 
-                return Container(
-                  margin: EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    leading: Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        Icons.local_shipping_outlined,
-                        color: warna,
-                        size: 24,
-                      ),
+                  if (namaLower.contains('mandiri')) {
+                    icon = Icons.account_balance;
+                    warna = Colors.yellow[800]!;
+                  } else if (namaLower.contains('bca')) {
+                    icon = Icons.account_balance;
+                    warna = Colors.blue[800]!;
+                  } else if (namaLower.contains('bni')) {
+                    icon = Icons.account_balance;
+                    warna = Colors.orange[800]!;
+                  } else if (namaLower.contains('bri')) {
+                    icon = Icons.account_balance;
+                    warna = Colors.blue[900]!;
+                  } else if (namaLower.contains('gopay')) {
+                    icon = Icons.account_balance_wallet;
+                    warna = Colors.green[700]!;
+                  } else if (namaLower.contains('dana')) {
+                    icon = Icons.account_balance_wallet;
+                    warna = Colors.blue[600]!;
+                  } else if (namaLower.contains('ovo')) {
+                    icon = Icons.account_balance_wallet;
+                    warna = Colors.purple[700]!;
+                  } else if (namaLower.contains('spay') ||
+                      namaLower.contains('shopee')) {
+                    icon = Icons.account_balance_wallet;
+                    warna = Colors.orange[700]!;
+                  }
+
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    title: Text(
-                      s.nama,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                    child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      leading: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: warna.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, color: warna, size: 24),
                       ),
-                    ),
-                    subtitle: Padding(
-                      padding: EdgeInsets.only(top: 4),
-                      child: Text(
-                        'Kode: ${s.kode}',
+                      title: Text(
+                        pm.namaBank,
                         style: TextStyle(
-                            fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ),
-                    trailing: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        currencyFormat.format(s.biayaDasar),
-                        style: TextStyle(
-                          color: Colors.green[700],
                           fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 4),
+                          Text(
+                            'No: ${pm.nomorRekening}',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          Text(
+                            'A/N: ${pm.atasNama}',
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                      isThreeLine: true,
+                      trailing: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: warna.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.chevron_right,
+                            color: warna, size: 20),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPengirimanTab() {
+    final currencyFormat = NumberFormat.currency(
+        locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return FutureBuilder<List<ShippingService>>(
+      future: _apiService.getShippingServices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+              child: CircularProgressIndicator(color: Colors.blue[800]));
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('Data tidak ditemukan'));
+        }
+        final services = snapshot.data!;
+        return Column(
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue[900]!, Colors.blue[600]!],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Jasa Pengiriman',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${services.length} jasa pengiriman tersedia',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+
+            // List Pengiriman
+            Expanded(
+              child: ListView.builder(
+                padding: EdgeInsets.all(12),
+                itemCount: services.length,
+                itemBuilder: (context, index) {
+                  final s = services[index];
+
+                  // Warna berdasarkan nama jasa pengiriman
+                  Color warna = Colors.orange[700]!;
+                  String namaLower = s.nama.toLowerCase();
+                  if (namaLower.contains('jne')) {
+                    warna = Colors.orange[800]!;
+                  } else if (namaLower.contains('j&t') ||
+                      namaLower.contains('jnt')) {
+                    warna = Colors.red[700]!;
+                  } else if (namaLower.contains('indah')) {
+                    warna = Colors.green[700]!;
+                  } else if (namaLower.contains('sicepat')) {
+                    warna = Colors.orange[600]!;
+                  } else if (namaLower.contains('anteraja')) {
+                    warna = Colors.yellow[800]!;
+                  }
+
+                  return Container(
+                    margin: EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ListTile(
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      leading: Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: warna.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.local_shipping_outlined,
+                          color: warna,
+                          size: 24,
+                        ),
+                      ),
+                      title: Text(
+                        s.nama,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Kode: ${s.kode}',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey[600]),
+                        ),
+                      ),
+                      trailing: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          currencyFormat.format(s.biayaDasar),
+                          style: TextStyle(
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      );
-    },
-  );
-}
+          ],
+        );
+      },
+    );
+  }
 }

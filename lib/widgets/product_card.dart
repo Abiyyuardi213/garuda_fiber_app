@@ -23,41 +23,43 @@ class ProductCard extends StatelessWidget {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // ← penting!
           children: [
             // Gambar Produk
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-              child: product.image != null
-                  ? Image.network(
-                      'https://warehouse.garudafiber.site/storage/produk/${product.image}',
-                      width: double.infinity,
-                      height: 130,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: double.infinity,
-                        height: 130,
+              child: AspectRatio(
+                aspectRatio: 1.2, // ← gambar selalu proporsional
+                child: product.image != null
+                    ? Image.network(
+                        'https://warehouse.garudafiber.site/storage/produk/${product.image}',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Container(
+                          color: Colors.grey[200],
+                          child: Icon(Icons.image_not_supported,
+                              color: Colors.grey, size: 40),
+                        ),
+                      )
+                    : Container(
                         color: Colors.grey[200],
-                        child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40),
+                        child: Icon(Icons.image,
+                            color: Colors.grey, size: 40),
                       ),
-                    )
-                  : Container(
-                      width: double.infinity,
-                      height: 130,
-                      color: Colors.grey[200],
-                      child: Icon(Icons.image, color: Colors.grey, size: 40),
-                    ),
+              ),
             ),
 
+            // Info Produk
             Padding(
-              padding: EdgeInsets.all(10),
+              padding: EdgeInsets.all(8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Merek
                   Text(
@@ -67,14 +69,16 @@ class ProductCard extends StatelessWidget {
                       color: Colors.blue[800],
                       fontWeight: FontWeight.bold,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: 2),
 
                   // Nama Produk
                   Text(
                     product.name,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -85,20 +89,21 @@ class ProductCard extends StatelessWidget {
                   // Kategori
                   Text(
                     product.category?.categoryName ?? 'Tanpa Kategori',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 6),
+                  SizedBox(height: 4),
 
                   // Harga
                   Text(
                     currencyFormat.format(product.price),
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.red,
                     ),
+                    maxLines: 1,
                   ),
 
                   // Satuan
@@ -106,15 +111,16 @@ class ProductCard extends StatelessWidget {
                     'per ${product.uom?.name ?? 'Unit'}',
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
-                  SizedBox(height: 8),
+                  SizedBox(height: 6),
 
                   // Tombol Beli
                   SizedBox(
                     width: double.infinity,
+                    height: 32,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[800],
-                        padding: EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.zero,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -122,7 +128,7 @@ class ProductCard extends StatelessWidget {
                       onPressed: onTap,
                       child: Text(
                         'Beli',
-                        style: TextStyle(color: Colors.white, fontSize: 13),
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                   ),
