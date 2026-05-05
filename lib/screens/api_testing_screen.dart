@@ -34,8 +34,8 @@ class _ApiTestingScreenState extends State<ApiTestingScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Garuda Fiber API Test'),
-        backgroundColor: Colors.deepPurple,
+        title: const Text('FakeStore API Test'),
+        backgroundColor: Colors.blue[900],
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
@@ -60,7 +60,7 @@ class _ApiTestingScreenState extends State<ApiTestingScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildLoading() => const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
+  Widget _buildLoading() => const Center(child: CircularProgressIndicator(color: Colors.blue));
 
   Widget _buildError(Object? error) => Center(
         child: Column(
@@ -131,8 +131,6 @@ class _ApiTestingScreenState extends State<ApiTestingScreen> with SingleTickerPr
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) return _buildLoading();
         if (snapshot.hasError) return _buildError(snapshot.error);
-        if (!snapshot.hasData || snapshot.data!.isEmpty) return _buildEmpty();
-
         final methods = snapshot.data!;
         return ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -143,13 +141,7 @@ class _ApiTestingScreenState extends State<ApiTestingScreen> with SingleTickerPr
               child: ListTile(
                 leading: const Icon(Icons.account_balance, color: Colors.blue),
                 title: Text(pm.namaBank),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('No: ${pm.nomorRekening}'),
-                    Text('A/N: ${pm.atasNama}'),
-                  ],
-                ),
+                subtitle: Text('No: ${pm.nomorRekening}\nA/N: ${pm.atasNama}'),
                 isThreeLine: true,
               ),
             );
@@ -166,8 +158,6 @@ class _ApiTestingScreenState extends State<ApiTestingScreen> with SingleTickerPr
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) return _buildLoading();
         if (snapshot.hasError) return _buildError(snapshot.error);
-        if (!snapshot.hasData || snapshot.data!.isEmpty) return _buildEmpty();
-
         final services = snapshot.data!;
         return ListView.builder(
           padding: const EdgeInsets.all(16),

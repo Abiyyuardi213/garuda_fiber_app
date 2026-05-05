@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../models/product_model.dart';
+import '../providers/cart_provider.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -28,108 +30,90 @@ class ProductCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // ← penting!
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Gambar Produk
+            // Gambar Produk dengan Favorit
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: AspectRatio(
-                aspectRatio: 1.2, // ← gambar selalu proporsional
-                child: product.image != null
-                    ? Image.network(
-                        'https://warehouse.garudafiber.site/storage/produk/${product.image}',
-                        fit: BoxFit.cover,
+                aspectRatio: 1.1,
+                child: Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(10),
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        product.image,
+                        fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
-                            Container(
-                          color: Colors.grey[200],
-                          child: Icon(Icons.image_not_supported,
-                              color: Colors.grey, size: 40),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: Icon(Icons.image,
-                            color: Colors.grey, size: 40),
+                            const Center(child: Icon(Icons.image_not_supported)),
                       ),
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: CircleAvatar(
+                          radius: 14,
+                          backgroundColor: Colors.white.withOpacity(0.8),
+                          child: const Icon(Icons.favorite_border, size: 16, color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
             // Info Produk
             Padding(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Merek
                   Text(
-                    product.merk ?? 'Garuda Fiber',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.blue[800],
-                      fontWeight: FontWeight.bold,
-                    ),
+                    product.category.toUpperCase(),
+                    style: TextStyle(fontSize: 9, color: Colors.blue[800], fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 2),
-
-                  // Nama Produk
+                  const SizedBox(height: 2),
                   Text(
-                    product.name,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
+                    product.title,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, height: 1.2),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 2),
-
-                  // Kategori
+                  const SizedBox(height: 4),
                   Text(
-                    product.category?.categoryName ?? 'Tanpa Kategori',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    currencyFormat.format(product.price * 16000),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue[900]),
                   ),
-                  SizedBox(height: 4),
-
-                  // Harga
-                  Text(
-                    currencyFormat.format(product.price),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                  if (product.rating != null)
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 10),
+                        const SizedBox(width: 2),
+                        Text('${product.rating!.rate}', style: const TextStyle(fontSize: 10)),
+                      ],
                     ),
-                    maxLines: 1,
-                  ),
-
-                  // Satuan
-                  Text(
-                    'per ${product.uom?.name ?? 'Unit'}',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  SizedBox(height: 6),
-
-                  // Tombol Beli
+                  const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
-                    height: 32,
+                    height: 28,
                     child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[800],
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      onPressed: onTap,
-                      child: Text(
-                        'Beli',
-                        style: TextStyle(color: Colors.white, fontSize: 12),
-                      ),
+                      style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
+                      onPressed: () {
+                        // Menggunakan Provider untuk menambah ke keranjang
+                        context.read<CartProvider>().addToCart(product);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${product.title} ditambahkan ke keranjang'),
+                            duration: const Duration(seconds: 1),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      child: const Text('Add to Cart', style: TextStyle(fontSize: 10)),
                     ),
                   ),
                 ],

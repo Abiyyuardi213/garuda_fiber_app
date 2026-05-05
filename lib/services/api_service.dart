@@ -6,17 +6,22 @@ import '../models/payment_method_model.dart';
 import '../models/shipping_service_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://warehouse.garudafiber.site/api';
+  static const String baseUrl = 'https://fakestoreapi.com';
 
   // Fetch all categories
   Future<List<Category>> getCategories() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/kategori'));
+      final response = await http.get(Uri.parse('$baseUrl/products/categories'));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> categoriesJson = data['data'];
-        return categoriesJson.map((json) => Category.fromJson(json)).toList();
+        final List<dynamic> categoriesJson = json.decode(response.body);
+        return categoriesJson.map((name) => Category(
+          id: name,
+          categoryName: name.toString().toUpperCase(),
+          description: 'Kategori produk $name',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        )).toList();
       } else {
         throw Exception('Failed to load categories: ${response.statusCode}');
       }
@@ -28,11 +33,10 @@ class ApiService {
   // Fetch all products
   Future<List<Product>> getProducts() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/produk'));
+      final response = await http.get(Uri.parse('$baseUrl/products'));
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> productsJson = data['data'];
+        final List<dynamic> productsJson = json.decode(response.body);
         return productsJson.map((json) => Product.fromJson(json)).toList();
       } else {
         throw Exception('Failed to load products: ${response.statusCode}');
@@ -42,57 +46,63 @@ class ApiService {
     }
   }
 
-  // Fetch all payment methods
+  // Mock payment methods
   Future<List<PaymentMethod>> getPaymentMethods() async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/metode-pembayaran'));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> paymentMethodsJson = data['data'];
-        return paymentMethodsJson.map((json) => PaymentMethod.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load payment methods: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching payment methods: $e');
-    }
+    return [
+      PaymentMethod(
+        id: '1',
+        namaBank: 'BCA Transfer',
+        nomorRekening: '1234567890',
+        atasNama: 'FAKE STORE',
+        deskripsi: 'Transfer bank manual ke rekening BCA',
+        status: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      PaymentMethod(
+        id: '2',
+        namaBank: 'Mandiri Transfer',
+        nomorRekening: '0987654321',
+        atasNama: 'FAKE STORE',
+        deskripsi: 'Transfer bank manual ke rekening Mandiri',
+        status: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    ];
   }
 
-  // Fetch all shipping services
+  // Mock shipping services
   Future<List<ShippingService>> getShippingServices() async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/jasa-pengiriman'));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final List<dynamic> shippingServicesJson = data['data'];
-        return shippingServicesJson.map((json) => ShippingService.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load shipping services: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error fetching shipping services: $e');
-    }
+    return [
+      ShippingService(
+        id: '1',
+        nama: 'JNE Reguler',
+        kode: 'JNE-REG',
+        biayaDasar: 15000,
+        status: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+      ShippingService(
+        id: '2',
+        nama: 'J&T Express',
+        kode: 'JNT-EXP',
+        biayaDasar: 12000,
+        status: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    ];
   }
 
-  // Checkout POST request
+  // Mock checkout
   Future<Map<String, dynamic>> checkout(Map<String, dynamic> checkoutData) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/checkout'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(checkoutData),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return json.decode(response.body);
-      } else {
-        final errorData = json.decode(response.body);
-        throw Exception(errorData['message'] ?? 'Checkout failed with status: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error during checkout: $e');
-    }
+    await Future.delayed(Duration(seconds: 1));
+    return {
+      'status': 'success',
+      'message': 'Pesanan berhasil dibuat!',
+      'order_id': 'ORD-${DateTime.now().millisecondsSinceEpoch}'
+    };
   }
 }
