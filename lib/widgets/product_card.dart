@@ -53,8 +53,12 @@ class ProductCard extends StatelessWidget {
                         right: 0,
                         child: CircleAvatar(
                           radius: 14,
-                          backgroundColor: Colors.white.withOpacity(0.8),
-                          child: const Icon(Icons.favorite_border, size: 16, color: Colors.red),
+                          backgroundColor: Colors.white.withValues(alpha: 0.8),
+                          child: const Icon(
+                            Icons.favorite_border,
+                            size: 16,
+                            color: Colors.red,
+                          ),
                         ),
                       ),
                     ],
@@ -63,60 +67,82 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // Info Produk
+            // Info Produk (🔥 diperbaiki di sini)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    product.category.toUpperCase(),
-                    style: TextStyle(fontSize: 9, color: Colors.blue[800], fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    product.title,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, height: 1.2),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    currencyFormat.format(product.price * 16000),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue[900]),
-                  ),
-                  if (product.rating != null)
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 10),
-                        const SizedBox(width: 2),
-                        Text('${product.rating!.rate}', style: const TextStyle(fontSize: 10)),
-                      ],
+              child: SizedBox(
+                height: 110, // 🔥 KUNCI UTAMA (biar semua card sama tinggi)
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.category.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: Colors.blue[800],
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 28,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
-                      onPressed: () {
-                        // Menggunakan Provider untuk menambah ke keranjang
-                        context.read<CartProvider>().addToCart(product);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${product.title} ditambahkan ke keranjang'),
-                            duration: const Duration(seconds: 1),
-                            backgroundColor: Colors.green,
+                    const SizedBox(height: 2),
+                    Text(
+                      product.title,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      currencyFormat.format(product.price * 16000),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[900],
+                      ),
+                    ),
+                    if (product.rating != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 10),
+                          const SizedBox(width: 2),
+                          Text(
+                            '${product.rating!.rate}',
+                            style: const TextStyle(fontSize: 10),
                           ),
-                        );
-                      },
-                      child: const Text('Add to Cart', style: TextStyle(fontSize: 10)),
+                        ],
+                      ),
+                    const Spacer(), // 🔥 dorong tombol ke bawah (sekarang aman)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 28,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                        ),
+                        onPressed: () {
+                          context.read<CartProvider>().addToCart(product);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  '${product.title} ditambahkan ke keranjang'),
+                              duration: const Duration(seconds: 1),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Add to Cart',
+                          style: TextStyle(fontSize: 10),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
